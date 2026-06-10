@@ -1,0 +1,1 @@
+A distributed job processing platform that reliably accepts, schedules, coordinates, executes, retries, and monitors asynchronous workloads across multiple worker nodes while providing delivery guarantees, fault tolerance, and operational visibility.
