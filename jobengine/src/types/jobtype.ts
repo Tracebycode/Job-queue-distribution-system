@@ -7,11 +7,10 @@ enum jobstatus{
     failed
 }
 
-export interface JobType{
+export  interface JobType{
     id: string;
     jobtype: string;
     payload: any;
     status: jobstatus;
-    createdAt: Date;
 
 }
