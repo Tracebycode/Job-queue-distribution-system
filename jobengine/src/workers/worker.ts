@@ -1,5 +1,6 @@
 import { InMemoryQueue } from "../queue/InMemoryQueue";
 
+
 export class worker{
     constructor(private queue :InMemoryQueue){};
 

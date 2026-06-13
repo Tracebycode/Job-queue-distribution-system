@@ -1,6 +1,6 @@
 
 
-enum jobstatus{
+ export enum jobstatus{
     pending,
     inprogress,
     completed,
@@ -12,5 +12,6 @@ export  interface JobType{
     jobtype: string;
     payload: any;
     status: jobstatus;
+    claimedate?: number;
 
 }
