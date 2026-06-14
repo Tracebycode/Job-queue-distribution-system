@@ -26,12 +26,15 @@ queue.enqueue(job2);
 queue.printQueue()
 
 const worker1 = new worker(queue);
-worker1.claimJob();
-queue.printQueue()
+const worker2 = new worker(queue);
+const worker3 = new worker(queue);
 worker1.claimJob();
 queue.printQueue()
 
-worker1.claimJob(); // This will show "No more jobs to process"
+
+worker2.claimJob();
+queue.printQueue()
+worker3.claimJob();
 queue.printQueue()
 
 setTimeout(() => {

@@ -9,6 +9,7 @@ export class InMemoryQueue{
     private failedJobs: JobType[] = [];
 
 
+
     enqueue(job : JobType): void{
         this.pendingJobs.push(job);
     }
@@ -56,7 +57,31 @@ export class InMemoryQueue{
         console.log("Completed Jobs:", this.completedJobs);
     }
 
+    //get stale jobs
+        getstalejobs(retryInterval: number): JobType[]{
+            const now = Date.now();
+
+            const staleJobs = this.processingJobs.filter(job => job.claimedate && (now - job.claimedate) > retryInterval);
+
+            return staleJobs;
+        }
+
+        recoverStaleJobs(retryInterval: number,staleJobs: JobType[])  : void{
+            staleJobs.forEach((job: JobType) => {
+                console.log(`Retrying stuck job with id: ${job.id}`);
+                this.processingJobs = this.processingJobs.filter(j => j.id !== job.id);
+                job.status = jobstatus.pending;
+                delete job.claimedate;
+                this.enqueue(job);
+             });
+
+
+            }
 
 
 
-}
+        }
+            
+
+
+
