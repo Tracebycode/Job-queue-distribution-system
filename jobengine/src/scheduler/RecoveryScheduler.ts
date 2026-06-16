@@ -8,7 +8,7 @@ class recoveryScheduler{
     recoverstruckjobs(queue: InMemoryQueue, retryInterval: number): void{
         setInterval(() => {
             const stuckJobs = queue.getstalejobs(retryInterval);
-            queue.recoverStaleJobs(retryInterval, stuckJobs);
+            queue.recoverStaleJobs( stuckJobs);
         }, retryInterval);  
     }
 

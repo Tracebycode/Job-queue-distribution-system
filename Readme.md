@@ -48,3 +48,33 @@ fail(jobId)
 - Store jobs
 - Deliver jobs
 - Track status
+
+
+# Queue Storage Model V1
+
+Ready Jobs
+
+- Jobs waiting for execution
+
+Processing Jobs
+
+- Jobs currently being executed
+
+# Job Claim Flow
+
+PENDING
+    |
+    v
+IN_PROGRESS
+
+Move Job:
+Ready -> Processing
+
+# Queue Owns
+
+- Job storage
+- Job state transitions
+
+# Workers Own
+
+- Job execution

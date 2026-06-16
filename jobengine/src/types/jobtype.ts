@@ -13,5 +13,7 @@ export  interface JobType{
     payload: any;
     status: jobstatus;
     claimedate?: number;
+    attempt:number;
+    maxattempt:number;
 
 }

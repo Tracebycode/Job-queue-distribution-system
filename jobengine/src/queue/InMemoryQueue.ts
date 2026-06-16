@@ -3,10 +3,15 @@ import { jobstatus } from "../types/jobtype";
 
 
 export class InMemoryQueue{
+
+   
+
+
+    //Required properties for the queue
     private pendingJobs: JobType[] = [];
     private processingJobs: JobType[] = [];
     private completedJobs: JobType[] = [];
-    private failedJobs: JobType[] = [];
+    private DLQ: JobType[] = [];
 
 
 
@@ -33,6 +38,8 @@ export class InMemoryQueue{
     }
 
 
+
+    //complete job and move to completed jobs
     completeJob(jobId: string): void{
         this.completedJobs.push(...this.processingJobs.filter(job=>job.id==jobId).map(job=>{ job.status = jobstatus.completed; return job; }));
     
@@ -44,10 +51,29 @@ export class InMemoryQueue{
 
     // storing the failed jobs
 
-    failjobs(jobId: string): void{
-        this.failedJobs.push(...this.processingJobs.filter(job=>job.id==jobId).map(job=>{ job.status = jobstatus.failed; return job; }));
-        this.processingJobs = this.processingJobs.filter(job=>job.id!=jobId);
-    }
+    failjob(jobId: string): void{
+        
+        const failedJob = this.processingJobs.find(job => job.id === jobId);
+                        
+
+        if(failedJob){
+            failedJob.attempt += 1;
+
+            if( failedJob.attempt < failedJob.maxattempt){
+                failedJob.status = jobstatus.pending;
+                delete failedJob.claimedate;
+                this.enqueue(failedJob);
+                this.processingJobs = this.processingJobs.filter(job => job.id !== jobId);
+            }else{
+                failedJob.status = jobstatus.failed;
+                this.DLQ.push(failedJob);
+                this.processingJobs = this.processingJobs.filter(job => job.id !== jobId);
+                console.log(`Job with id ${jobId} has failed and moved to DLQ.`);
+            }
+
+            }
+        }
+    
 
     //temporary to check queue working
 
@@ -66,7 +92,8 @@ export class InMemoryQueue{
             return staleJobs;
         }
 
-        recoverStaleJobs(retryInterval: number,staleJobs: JobType[])  : void{
+        //recover stale jobs
+        recoverStaleJobs(staleJobs: JobType[])  : void{
             staleJobs.forEach((job: JobType) => {
                 console.log(`Retrying stuck job with id: ${job.id}`);
                 this.processingJobs = this.processingJobs.filter(j => j.id !== job.id);
@@ -77,6 +104,19 @@ export class InMemoryQueue{
 
 
             }
+
+
+
+
+            //fallback for failed jobs
+
+          
+
+
+        
+        
+
+
 
 
 
