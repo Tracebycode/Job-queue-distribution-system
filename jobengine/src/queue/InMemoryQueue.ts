@@ -12,10 +12,30 @@ export class InMemoryQueue{
     private processingJobs: JobType[] = [];
     private completedJobs: JobType[] = [];
     private DLQ: JobType[] = [];
+    private DelayedQueue: JobType[] = [];
 
 
+    private moveJobToPending(job: JobType): void {
+        delete job.claimedate;
+        job.status = jobstatus.pending; 
+        this.pendingJobs.push(job);     
+    }   
+
+    private promotedelayedJobs(job: JobType): void {
+        delete job.scheduledAt;
+        this.moveJobToPending(job);
+
+        
+    }
 
     enqueue(job : JobType): void{
+        job.status = jobstatus.pending;
+
+        if(job.scheduledAt && job.scheduledAt > Date.now()){
+            this.DelayedQueue.push(job);
+            console.log(`Job with id ${job.id} is scheduled for future execution at ${new Date(job.scheduledAt).toISOString()}.`);
+            return;
+        }
         this.pendingJobs.push(job);
     }
 
@@ -31,7 +51,7 @@ export class InMemoryQueue{
             return null;
         }
         job.status = jobstatus.inprogress;
-        this.processingJobs.push(job);
+            this.processingJobs.push(job);
         job.claimedate = Date.now();
         return job;
 
@@ -60,10 +80,9 @@ export class InMemoryQueue{
             failedJob.attempt += 1;
 
             if( failedJob.attempt < failedJob.maxattempt){
-                failedJob.status = jobstatus.pending;
-                delete failedJob.claimedate;
-                this.enqueue(failedJob);
                 this.processingJobs = this.processingJobs.filter(job => job.id !== jobId);
+                this.moveJobToPending(failedJob);
+                
             }else{
                 failedJob.status = jobstatus.failed;
                 this.DLQ.push(failedJob);
@@ -97,9 +116,7 @@ export class InMemoryQueue{
             staleJobs.forEach((job: JobType) => {
                 console.log(`Retrying stuck job with id: ${job.id}`);
                 this.processingJobs = this.processingJobs.filter(j => j.id !== job.id);
-                job.status = jobstatus.pending;
-                delete job.claimedate;
-                this.enqueue(job);
+               this.moveJobToPending(job);
              });
 
 
@@ -108,20 +125,23 @@ export class InMemoryQueue{
 
 
 
-            //fallback for failed jobs
-
-          
-
-
-        
-        
-
-
-
+            //ready jobs from delayed queue and move to pending queue
+            promoteDelayedJobs(): void{
+                const now = Date.now();
+                const readyJobs = this.DelayedQueue.filter(job => job.scheduledAt && job.scheduledAt <= now);
+                readyJobs.forEach(job => {
+                    console.log(`Promoting delayed job with id ${job.id} to pending queue.`);
+                    this.promotedelayedJobs(job);
+                });
+                this.DelayedQueue = this.DelayedQueue.filter(job => !readyJobs.includes(job));
 
 
         }
+
+
+        
+
             
 
 
-
+    }

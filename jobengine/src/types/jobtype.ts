@@ -16,4 +16,6 @@ export  interface JobType{
     attempt:number;
     maxattempt:number;
 
+    scheduledAt?: number;
+
 }
