@@ -14,7 +14,7 @@ export class InMemoryQueue{
     private DLQ: JobType[] = [];
     private DelayedQueue: JobType[] = [];
 
-
+    //private method to move job to pending queue
     private moveJobToPending(job: JobType): void {
         delete job.claimedate;
         job.status = jobstatus.pending; 
@@ -27,6 +27,23 @@ export class InMemoryQueue{
 
         
     }
+
+    //calculate backoff time for retrying failed jobs
+    private calculateBackoff(attempt: number): number{
+        const baseDelay = 1000; // 1 second
+        return baseDelay * Math.pow(2, attempt);
+    }
+
+
+
+
+
+
+
+
+
+
+
 
     enqueue(job : JobType): void{
         job.status = jobstatus.pending;
@@ -76,12 +93,15 @@ export class InMemoryQueue{
         const failedJob = this.processingJobs.find(job => job.id === jobId);
                         
 
-        if(failedJob){
+        if(failedJob ){
             failedJob.attempt += 1;
 
             if( failedJob.attempt < failedJob.maxattempt){
+                const backoffTime = this.calculateBackoff(failedJob.attempt);
+                failedJob.scheduledAt = Date.now() + backoffTime;
                 this.processingJobs = this.processingJobs.filter(job => job.id !== jobId);
                 this.moveJobToPending(failedJob);
+                console.log(`Job with id ${jobId} has failed. Retrying in ${backoffTime / 1000} seconds.`);
                 
             }else{
                 failedJob.status = jobstatus.failed;

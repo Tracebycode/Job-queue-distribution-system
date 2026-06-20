@@ -1,47 +1,38 @@
 import {InMemoryQueue} from "./queue/InMemoryQueue";
-import type {JobType} from "./types/jobtype";
+import {jobstatus, type JobType} from "./types/jobtype";
 import {worker} from "./workers/worker";
 
 
-
+//testing the retry mechanism with backoff strategy
 const queue = new InMemoryQueue();
 
+
 const job1: JobType = {
-    id: "1",
-    jobtype: "email",
-    payload: { to: "user@example.com" },
-    status: 0
+    id: "job1",
+    payload: {task: "Task 1"},
+    status: jobstatus.pending,
+    jobtype: "email notification",
+    attempt: 0,
+    maxattempt: 3,
+};
+const job2: JobType = {
+    id: "job2",
+    payload: {task: "Task 2"},
+    jobtype: "data processing",
+    status: jobstatus.pending,
+    attempt: 0,
+    maxattempt: 3,
 };
 
-const job2: JobType = {
-    id: "2",
-    jobtype: "sms",
-    payload: { to: "+1234567890" },
-    status: 0
-};  
 
 queue.enqueue(job1);
-queue.printQueue()
 queue.enqueue(job2);
-queue.printQueue()
 
-const worker1 = new worker(queue);
-const worker2 = new worker(queue);
-const worker3 = new worker(queue);
+
+const worker1 = new worker(queue,true);
 worker1.claimJob();
-queue.printQueue()
 
-
-worker2.claimJob();
-queue.printQueue()
-worker3.claimJob();
-queue.printQueue()
 
 setTimeout(() => {
-    queue.printQueue()
-    
-}, 2000);
-
-
-
-
+    queue.printQueue();
+}, 10000);
